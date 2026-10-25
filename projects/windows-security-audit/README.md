@@ -8,7 +8,10 @@ A beginner-friendly, **read-only** Python tool for inspecting several Windows se
 | Windows Firewall | Whether each firewall profile is enabled | Does not inspect individual firewall rules |
 | Microsoft Defender | Real-time protection status, when available | Defender may be inactive when Norton or another antivirus is installed |
 | User Account Control (UAC) | Whether UAC is enabled | Does not evaluate the prompt level |
-| System drive BitLocker | Reported protection status | Unknown may mean unsupported edition, permissions, or other encryption |
+| System drive encryption | Encryption percentage, volume status, and BitLocker protection | A fully encrypted drive can still have BitLocker protection switched off |
+| Antivirus products | Names registered in Windows Security Center | Registration does not by itself prove conflicting active scanners |
+
+**Encryption and protection are different.** If the drive is fully encrypted but protection is off, verify that a recovery key is safely backed up before changing protection settings. Do not post recovery keys online.
 
 **Unknown is not a failure.** This tool does not determine whether a computer is safe or detect malware.
 
@@ -33,6 +36,8 @@ The tool prints a short summary and creates `security-audit-report.json` locally
 The report contains security configuration details about your device. **Do not commit or upload your actual generated report.** The root repository `.gitignore` excludes it.
 
 ## What I learned
+- Distinguishing encrypted volumes from active BitLocker key protection
+- Checking antivirus registration without assuming products conflict
 - Running read-only PowerShell commands from Python
 - Understanding firewall profiles, Defender status, UAC, and drive encryption
 - Handling missing permissions and unavailable checks safely
