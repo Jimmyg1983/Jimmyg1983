@@ -21,8 +21,12 @@ try {
 } catch { $r.uac = @{status='unknown'} }
 try {
  $b = Get-BitLockerVolume -MountPoint $env:SystemDrive
- $r.encryption = @{status='ok'; protection=([string]$b.ProtectionStatus)}
+ $r.encryption = @{status='ok'; protection=([string]$b.ProtectionStatus); volume_status=([string]$b.VolumeStatus); encrypted_percent=$b.EncryptionPercentage}
 } catch { $r.encryption = @{status='unknown'} }
+try {
+ $products = @(Get-CimInstance -Namespace root/SecurityCenter2 -ClassName AntivirusProduct | Select-Object -ExpandProperty displayName)
+ $r.antivirus_products = @{status='ok'; names=$products}
+} catch { $r.antivirus_products = @{status='unknown'} }
 $r | ConvertTo-Json -Depth 6 -Compress
 """
 
@@ -58,7 +62,23 @@ def main():
     uac = results.get("uac", {})
     print("User Account Control:", ("ON" if uac.get("enabled") else "OFF") if uac.get("status") == "ok" else "UNKNOWN")
     encryption = results.get("encryption", {})
-    print("System drive BitLocker:", encryption.get("protection", "UNKNOWN") if encryption.get("status") == "ok" else "UNKNOWN")
+    if encryption.get("status") == "ok":
+        print("System drive encryption:", encryption.get("volume_status", "UNKNOWN"), "-", encryption.get("encrypted_percent", "?"), "%")
+        print("BitLocker key protection:", encryption.get("protection", "UNKNOWN"))
+        if str(encryption.get("protection", "")).lower() == "off":
+            print("REVIEW: Encryption is present but protection is OFF. Verify recovery key before making changes.")
+    else:
+        print("System drive encryption: UNKNOWN")
+    products = results.get("antivirus_products", {})
+    if products.get("status") == "ok":
+        names = products.get("names", [])
+        if isinstance(names, str):
+            names = [names]
+        print("Registered antivirus products:", ", ".join(names) if names else "None reported")
+        if len(names) > 1:
+            print("REVIEW: Multiple antivirus products are registered; check their active roles.")
+    else:
+        print("Registered antivirus products: UNKNOWN")
     print("UNKNOWN does not mean the system is insecure.")
     report = {"timestamp_utc": datetime.now(timezone.utc).isoformat(), "checks": results}
     Path("security-audit-report.json").write_text(json.dumps(report, indent=2), encoding="utf-8")
