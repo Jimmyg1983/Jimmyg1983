@@ -18,6 +18,10 @@ I spent more than 20 years working in construction, where I learned to solve pro
 
 ## Featured work
 
+- **[Windows Security Audit Tool](projects/windows-security-audit/README.md)** — Original read-only Python and PowerShell checks for firewall profiles, Defender status, UAC, and drive encryption.
+- **[Network Port Checker](https://github.com/Jimmyg1983/network-port-checker)** — Localhost TCP port checker with documentation.
+
+
 **[My IT & Cybersecurity Portfolio](https://jimmyg1983.github.io/)** — About me, skills, education, and a featured contractor-app concept called SiteSync.
 
 > Some repositories on this account are forks or copies of open-source security tools that I use for learning. They are not software I claim to have created.
