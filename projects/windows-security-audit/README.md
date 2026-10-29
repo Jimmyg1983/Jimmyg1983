@@ -43,10 +43,28 @@ The report contains security configuration details about your device. **Do not c
 - Handling missing permissions and unavailable checks safely
 - Saving structured JSON results and writing reproducible documentation
 
+## Automated tests
+
+The project includes mocked Python regression tests for normal and malformed PowerShell responses. Run them from the repository root:
+
+```sh
+python -m unittest discover -s projects/windows-security-audit/tests -v
+```
+
+These tests do not inspect or change your computer. A passing test run is not evidence that an actual Windows machine is secure.
+
+## Demonstrate the project safely
+
+1. On your own Windows computer, run `python audit.py` from the project folder.
+2. Record the terminal output, **after removing device names and other identifying information**.
+3. Explain what each result means, including why `UNKNOWN` is not automatically a failure.
+4. Keep `security-audit-report.json` private. Do not upload reports, recovery keys, or security configuration details.
+5. Note the Windows version and whether antivirus software is managed by a third party, without publishing sensitive settings.
+
 ## Next improvements
-- Mocked tests to validate output without running on a Windows host
-- Clearer status labels and actionable remediation references
+- Clearer status labels and remediation references
 - Support for alternate Windows security products
+- Additional Windows-specific integration testing
 
 ## Author
 James Gamache — BSIT student interested in IT support, network security, and defensive security.
