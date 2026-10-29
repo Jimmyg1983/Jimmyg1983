@@ -56,6 +56,10 @@ def main():
         profiles = firewall.get("profiles", [])
         if isinstance(profiles, dict):
             profiles = [profiles]
+        if not isinstance(profiles, list):
+            profiles = []
+        if not profiles:
+            print("Firewall profiles: UNKNOWN")
         for profile in profiles:
             if not isinstance(profile, dict):
                 continue
