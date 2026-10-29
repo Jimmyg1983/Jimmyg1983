@@ -41,27 +41,38 @@ def main():
         if p.returncode:
             raise ValueError("PowerShell checks failed")
         results = json.loads(p.stdout)
-    except (ValueError, json.JSONDecodeError, subprocess.TimeoutExpired) as err:
+    except (ValueError, subprocess.TimeoutExpired, OSError) as err:
         raise SystemExit(f"Audit could not complete: {err}")
+    if not isinstance(results, dict):
+        raise SystemExit("Audit could not complete: unexpected PowerShell response")
     print("WINDOWS SECURITY AUDIT (read-only)")
     print("=" * 40)
-    firewall = results.get("firewall", {})
+    def section(name):
+        value = results.get(name, {})
+        return value if isinstance(value, dict) else {}
+
+    firewall = section("firewall")
     if firewall.get("status") == "ok":
         profiles = firewall.get("profiles", [])
         if isinstance(profiles, dict):
             profiles = [profiles]
         for profile in profiles:
-            print(f"Firewall {profile['Name']}: {'ON' if profile['Enabled'] else 'OFF'}")
+            if not isinstance(profile, dict):
+                continue
+            name = profile.get("Name", "Unknown profile")
+            enabled = profile.get("Enabled")
+            status = "ON" if enabled is True else "OFF" if enabled is False else "UNKNOWN"
+            print(f"Firewall {name}: {status}")
     else:
         print("Firewall: UNKNOWN")
-    defender = results.get("defender", {})
+    defender = section("defender")
     if defender.get("status") == "ok":
         print("Defender real-time protection:", "ON" if defender.get("realtime") else "OFF / INACTIVE")
     else:
         print("Defender: UNKNOWN (check third-party antivirus)")
-    uac = results.get("uac", {})
+    uac = section("uac")
     print("User Account Control:", ("ON" if uac.get("enabled") else "OFF") if uac.get("status") == "ok" else "UNKNOWN")
-    encryption = results.get("encryption", {})
+    encryption = section("encryption")
     if encryption.get("status") == "ok":
         print("System drive encryption:", encryption.get("volume_status", "UNKNOWN"), "-", encryption.get("encrypted_percent", "?"), "%")
         print("BitLocker key protection:", encryption.get("protection", "UNKNOWN"))
@@ -69,11 +80,14 @@ def main():
             print("REVIEW: Encryption is present but protection is OFF. Verify recovery key before making changes.")
     else:
         print("System drive encryption: UNKNOWN")
-    products = results.get("antivirus_products", {})
+    products = section("antivirus_products")
     if products.get("status") == "ok":
         names = products.get("names", [])
         if isinstance(names, str):
             names = [names]
+        if not isinstance(names, list):
+            names = []
+        names = [name for name in names if isinstance(name, str)]
         print("Registered antivirus products:", ", ".join(names) if names else "None reported")
         if len(names) > 1:
             print("REVIEW: Multiple antivirus products are registered; check their active roles.")
